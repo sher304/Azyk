@@ -10,17 +10,15 @@ import SwiftUI
 struct RestaurantDetailView: View {
     @Environment(\.dismiss) var dismiss
     @State private var showSheet = false
-
+    @State private var isFavorite: Bool
     
-    var restaurantName: String = "Sultan Bistro"
-    var boxName: String = "Kebab Box"
-    var oldPrice: String = "$12.99"
-    var newPrice: String = "$7.99"
-    var rating: Double = 4.6
-    var collectingTime: String = "18:00 - 20:00"
-    var address: String = "Bishkek, Manas Ave 45"
-    var description: String = "A delicious mix of grilled meats, vegetables, and rice. Perfect for a late dinner or takeaway meal."
-    var overallRating: Double = 4.4
+    let restaurant: Restaurant
+    private let favoritesRepository = FavoritesRepository.shared
+
+    init(restaurant: Restaurant) {
+        self.restaurant = restaurant
+        self._isFavorite = State(initialValue: FavoritesRepository.shared.isFavorite(restaurant))
+    }
 
     var body: some View {
         NavigationStack {
@@ -42,7 +40,7 @@ struct RestaurantDetailView: View {
                                 .resizable()
                                 .frame(width: 35, height: 35)
                                 .foregroundStyle(.white)
-                            Text(restaurantName)
+                            Text(restaurant.name)
                                 .font(.title)
                                 .fontWeight(.bold)
                                 .foregroundColor(.white)
@@ -52,10 +50,10 @@ struct RestaurantDetailView: View {
  
                     // Box name, price info
                     HStack {
-                        Text(boxName)
+                        Text(restaurant.menu.first?.name ?? "")
                             .font(.headline)
                         Spacer()
-                        Text(oldPrice)
+                        Text(restaurant.oldPrice.description)
                             .strikethrough()
                             .foregroundColor(.gray)
                     }
@@ -63,12 +61,12 @@ struct RestaurantDetailView: View {
                     
                     // Rating, price
                     HStack {
-                        Label("\(String(format: "%.1f", rating)) ★", systemImage: "star.fill")
+                        Label("\(String(format: "%.1f", restaurant.rating)) ★", systemImage: "star.fill")
                             .foregroundColor(.yellow)
                         
                         Spacer()
                         
-                        Text(newPrice)
+                        Text(restaurant.newPrice.description)
                             .font(.title2)
                             .fontWeight(.bold)
                             .foregroundColor(.green)
@@ -80,7 +78,7 @@ struct RestaurantDetailView: View {
                         Text("Collecting Time:")
                             .fontWeight(.semibold)
                         Spacer()
-                        Text(collectingTime)
+                        Text("18:00 - 20:00")
                     }
                     .padding(.horizontal)
                     
@@ -97,7 +95,7 @@ struct RestaurantDetailView: View {
                         VStack(alignment: .leading, spacing: 4) {
                             Text("Address")
                                 .font(.headline)
-                            Text(address)
+                            Text(restaurant.address)
                                 .foregroundColor(.secondary)
                         }
                     }
@@ -111,7 +109,7 @@ struct RestaurantDetailView: View {
                     VStack(alignment: .leading, spacing: 4) {
                         Text("Description")
                             .font(.headline)
-                        Text(description)
+                        Text(restaurant.menu.first?.description ?? "")
                             .foregroundColor(.secondary)
                     }
                     .padding(.horizontal)
@@ -168,19 +166,47 @@ struct RestaurantDetailView: View {
                 }
 
                 Button(action: {
-                    // Favorite action
+                    toggleFavorite()
                 }) {
-                    Image(systemName: "suit.heart")
-                        .foregroundStyle(.white)
+                    Image(systemName: isFavorite ? "heart.fill" : "suit.heart")
+                        .foregroundStyle(isFavorite ? .red : .white)
                         .padding(10)
                         .background(Circle().fill(.black.opacity(0.4)))
                 }
             }
         }
         .toolbarBackground(.white, for: .navigationBar)
+        .onAppear {
+            updateFavoriteState()
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .favoritesDidChange)) { _ in
+            updateFavoriteState()
+        }
+    }
+    
+    // MARK: - Private Methods
+    
+    private func toggleFavorite() {
+        favoritesRepository.toggleFavorite(restaurant)
+        isFavorite.toggle()
+    }
+    
+    private func updateFavoriteState() {
+        isFavorite = favoritesRepository.isFavorite(restaurant)
     }
 }
 
 #Preview {
-    RestaurantDetailView()
+    RestaurantDetailView(restaurant: Restaurant(name: "Green Leaf Cafe",
+                                cuisine: "Vegetarian & Vegan",
+                                rating: 4.2,
+                                address: "45 Chuy Avenue, Bishkek",
+                                isOpen: false,
+                                imageName: "restaurant2",
+                                menu: [
+                                    MenuItem(name: "Vegan Burger", price: 300, description: "Plant-based patty with fresh vegetables."),
+                                    MenuItem(name: "Quinoa Salad", price: 250, description: "Healthy mix of quinoa, avocado, and greens."),
+                                    MenuItem(name: "Fruit Smoothie", price: 150, description: "Seasonal fruits blended with almond milk.")
+                                ], oldPrice: 25,
+                                                newPrice: 20, isFavorite: false))
 }

@@ -12,7 +12,18 @@ struct FiltredOption: View {
     
     var body: some View {
         NavigationStack {
-            RestaurantViews()
+            RestaurantViews(restaurants: [Restaurant(name: "Green Leaf Cafe",
+                         cuisine: "Vegetarian & Vegan",
+                         rating: 4.2,
+                         address: "45 Chuy Avenue, Bishkek",
+                         isOpen: false,
+                         imageName: "restaurant2",
+                         menu: [
+                             MenuItem(name: "Vegan Burger", price: 300, description: "Plant-based patty with fresh vegetables."),
+                             MenuItem(name: "Quinoa Salad", price: 250, description: "Healthy mix of quinoa, avocado, and greens."),
+                             MenuItem(name: "Fruit Smoothie", price: 150, description: "Seasonal fruits blended with almond milk.")
+                         ], oldPrice: 25,
+                                                     newPrice: 20, isFavorite: false)])
         }
         .navigationBarBackButtonHidden(true)
         .toolbar {

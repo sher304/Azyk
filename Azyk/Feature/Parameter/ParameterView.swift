@@ -9,12 +9,13 @@ import SwiftUI
 
 struct ParameterView: View {
     @Environment(\.dismiss) var dimsiss
+    @ObservedObject var viewModel: HomeViewModel
 
     var body: some View {
         NavigationStack {
             ScrollView {
                 LazyVStack(alignment: .leading, spacing: 25) {
-                    ForEach(0..<5) { section in
+                    ForEach(0..<3, id: \.self) { section in
                         VStack(alignment: .leading) {
                             HStack {
                                 Text("Category \(section)")
@@ -31,12 +32,17 @@ struct ParameterView: View {
                             .padding(.horizontal)
                             ScrollView(.horizontal, showsIndicators: false) {
                                 LazyHStack(spacing: 15) {
-                                    ForEach(0..<10) { item in
+                                    ForEach(viewModel.mockRestaurants, id: \.id) { restaurant in
                                         NavigationLink {
-                                            RestaurantDetailView()
+                                            RestaurantDetailView(restaurant: restaurant)
                                         } label: {
-                                            FoodViewCell()
-                                                .frame(width: 300)
+                                            FoodViewCell(
+                                                restaurant: restaurant,
+                                                onFavoriteToggle: { restaurant in
+                                                    viewModel.toggleFavorite(for: restaurant)
+                                                }
+                                            )
+                                            .frame(width: 300)
                                         }
                                     }
                                 }
@@ -52,5 +58,5 @@ struct ParameterView: View {
 }
 
 #Preview {
-    ParameterView()
+    ParameterView(viewModel: HomeViewModel())
 }
